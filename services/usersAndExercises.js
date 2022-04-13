@@ -1,74 +1,83 @@
 const db = require('../db')
 const erorrs = require('./errors')
 
-async function createUser (req, res, next) {
+async function createUser (req, res) {
   const userName = req.body.username;
-  try {
-    const user = await db.insertOrLookupUser(userName);
-    if (!user) {
-      throw new erorrs.CustomError('404', 'Can not create new user')
-    }
+  const user = await db.insertOrLookupUser(userName);
+  
+  if(!userName) {
+    res.status(409).json({
+      error: "Can not create without username",
+    })
+    return
+  }
+  if (!user) {
+    res.status(409).json({
+      error: "Can not create new user because such a user already has",
+    })
+    return
+  } else {
     res.json(user);
   }
-  catch (error) {
-    next(error);
-  }
 };
 
-async function getAllUsers (req, res, next) {
-  try {
-    const users = await db.getAllUsers();
-    if(!users) {
-      throw new erorrs.CustomError('404', 'Can not find anyone users')
-    }
+async function getAllUsers (req, res) {
+  const users = await db.getAllUsers();
+  if(!users) {
+    res.status(404).json({
+      error: "Can not find anyone users"
+    })
+    return
+  } else {
     res.json(users)
-  }
-  catch (error) {
-    next(error)
+    return
   }
 };
 
-async function getUserById (req, res, next) {
+async function getUserById (req, res) {
   const id = req.params.userId;
   if(!id) {
-    next();
-    return;
+    res.status(409).json({
+      error: `Can not find user with id=${id}`
+    })
+    return
   }
 
-  try {
-    const user = await db.getUserById(id);
-    if(!user) {
-      throw new erorrs.CustomError('404', `Can not find user with this id=${id}`)
-    }
+  const user = await db.getUserById(id);
+
+  if(!user) {
+    res.status(409).json({
+      error: `Can not find user with id=${id}`
+    })
+    return
+  } else {
     res.json(user)
-  }
-  catch(error) {
-    next(error)
+    return
   }
 };
 
-async function createExercises (req, res, next) {
+async function createExercises (req, res) {
   const id = req.params.userId;
   const user = await db.getUserById(id);
-  try {
-    const exercise = await db.insertExercise(
-      id,
-      req.body.description,
-      req.body.duration,
-      req.body.date,
-    )
-    if (!exercise) {
-      throw new error.CustomError('404', 'Can not create exesice')
-    }
+  const exercise = await db.insertExercise(
+    id,
+    req.body.description,
+    req.body.duration,
+    req.body.date,
+  )
+  if (!exercise) {
+    res.status(404).json({
+      error: "Can not create exercise"
+    })
+    return
+  } else {
     user.exercises = exercise
     res.json(user)
-  }
-  catch (error) {
-    next(error)
+    return
   }
 };
 
-async function getExercisesOfUserById (req, res, next) {
+async function getExercisesOfUserById (req, res) {
   const count = db.getCountOfExercisesByUserIdFromTo(
     req.params.userId,
     req.query.from,
@@ -89,8 +98,8 @@ async function getExercisesOfUserById (req, res, next) {
   };
 
   res.json(user);
+  return
 };
-
 
 module.exports = {
   createUser,

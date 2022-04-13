@@ -2,7 +2,9 @@ const path = require("path");
 const fs = require("fs");
 const util = require("util");
 const sqlite3 = require("sqlite3");
+const sqlite = require("sqlite-sync")
 require("dotenv").config();
+
 
 const DB_PATH = path.join(__dirname, "users.db");
 const DB_SQL_PATH = path.join(__dirname, "users-db.sql");
@@ -26,6 +28,7 @@ const dbInit = async () => {
   let initSQL = fs.readFileSync(DB_SQL_PATH, "utf-8");
   await SQL3.exec(initSQL);
 };
+
 
 const insertUser = async (username) => {
   let result = await SQL3.run(
